@@ -1,0 +1,17 @@
+[
+  {
+    "_id": "333333333333333333333300",
+    "username": "batman",
+    "password": "$2a$10$UGpZvHcJkDUsgbHEieDI7.EYuRTka4P1wojOtSYJmGCQ4BH/BNNXy"
+  },
+  {
+    "_id": "333333333333333333333301",
+    "username": "nightwing",
+    "password": "$2a$10$UGpZvHcJkDUsgbHEieDI7.EYuRTka4P1wojOtSYJmGCQ4BH/BNNXy"
+  },
+  {
+    "_id": "333333333333333333333302",
+    "username": "catwoman",
+    "password": "$2a$10$UGpZvHcJkDUsgbHEieDI7.EYuRTka4P1wojOtSYJmGCQ4BH/BNNXy"
+  }
+]
