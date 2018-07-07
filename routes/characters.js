@@ -24,7 +24,7 @@ router.get('/', jwtAuth, (req, res, next) => {
   Character
     .find(filter)
     .then(results => {
-      res.json(results);
+      res.json(results[0]);
     })
     .catch(err => {
       next(err);
@@ -151,7 +151,7 @@ router.post('/', jwtAuth, (req, res, next) => {
   ;
 });
 
-/* ========== PUT/UPDATE A SINGLE ITEM ========== */
+/* ========== PUT/UPDATE A SINGLE CHARACTER ========== */
 router.put('/:id', jwtAuth, (req, res, next) => {
   const { id } = req.params;
   const { player } = req.body;
