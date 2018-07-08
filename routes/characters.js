@@ -153,9 +153,6 @@ router.post('/', jwtAuth, (req, res, next) => {
 
 /* ========== PUT/UPDATE A SINGLE CHARACTER ========== */
 router.put('/:id', jwtAuth, (req, res, next) => {
-  console.log('PUT endpoint reached');
-  console.log(req.body);
-
   const { id } = req.params;
   const updateCharacter = req.body;
 
