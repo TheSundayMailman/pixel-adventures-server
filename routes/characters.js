@@ -98,7 +98,7 @@ router.post('/', jwtAuth, (req, res, next) => {
         armor: 'BLACK-ROBE',
         accessory: 'MAGIC-RING'
       },
-      skills: ['FIREBALL'],
+      skills: ['FIRE'],
       items: [
         {id: 1, name: 'POTION', quantity: 5},
         {id: 3, name: 'ETHER', quantity: 3}
@@ -153,9 +153,11 @@ router.post('/', jwtAuth, (req, res, next) => {
 
 /* ========== PUT/UPDATE A SINGLE CHARACTER ========== */
 router.put('/:id', jwtAuth, (req, res, next) => {
+  console.log('PUT endpoint reached');
+  console.log(req.body);
+
   const { id } = req.params;
-  const { player } = req.body;
-  const updateCharacter = { player };
+  const updateCharacter = req.body;
 
   Character
     .findByIdAndUpdate({_id: id}, updateCharacter, { new: true })
