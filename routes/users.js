@@ -1,13 +1,9 @@
 'use strict';
 
 const express = require('express');
-
-const User = require('../models/user.js');
-
 const router = express.Router();
 
-// use express json parser for all incoming requests
-router.use(express.json());
+const User = require('../models/user.js');
 
 /* ========== POST/CREATE A USER ========== */
 router.post('/', (req, res, next) => {
@@ -18,10 +14,12 @@ router.post('/', (req, res, next) => {
   const missingField = requiredFields.find(field => !(field in req.body));
 
   if (missingField) {
-    const err = new Error();
-    err.message = `Missing '${missingField}' in request body`;
-    err.status = 422;
-    return next(err);
+    return res.status(422).json({
+      code: 422,
+      reason: 'ValidationError',
+      message: 'Missing field',
+      location: missingField
+    });
   }
 
   // verify field data type
@@ -29,23 +27,25 @@ router.post('/', (req, res, next) => {
   const nonStringField = stringFields.find(field => field in req.body && typeof req.body[field] !== 'string');
 
   if (nonStringField) {
-    const err = new Error();
-    err.message = 'Incorrect field type: expected string';
-    err.status = 422;
-    return next(err);
+    return res.status(422).json({
+      code: 422,
+      reason: 'ValidationError',
+      message: 'Incorrect field type: expected string',
+      location: nonStringField
+    });
   }
 
   // verify all fields have no whitespace
   const explicityTrimmedFields = ['username', 'password'];
-  const nonTrimmedField = explicityTrimmedFields.find(
-    field =>
-      req.body[field].trim() !== req.body[field]);
+  const nonTrimmedField = explicityTrimmedFields.find(field => req.body[field].trim() !== req.body[field]);
 
   if (nonTrimmedField) {
-    const err = new Error();
-    err.message = 'Cannot start or end with whitespace';
-    err.status = 422;
-    return next(err);
+    return res.status(422).json({
+      code: 422,
+      reason: 'ValidationError',
+      message: 'Cannot start or end with whitespace',
+      location: nonTrimmedField
+    });
   }
 
   // verify field lengths
@@ -54,37 +54,46 @@ router.post('/', (req, res, next) => {
       min: 6
     },
     password: {
-      min: 8,
+      min: 10,
       max: 72
     }
   };
   const tooSmallField = Object.keys(sizedFields).find(
-    field => 'min' in sizedFields[field] &&
-      req.body[field].trim().length < sizedFields[field].min
+    field => 'min' in sizedFields[field] && req.body[field].trim().length < sizedFields[field].min
   );
-  if (tooSmallField) {
-    const min = sizedFields[tooSmallField].min;
-    const err = new Error();
-    err.message = `Field: '${tooSmallField}' must be at least ${min} characters long`;
-    err.status = 422;
-    return next(err);
-  }
-
   const tooLargeField = Object.keys(sizedFields).find(
-    field => 'max' in sizedFields[field] &&
-      req.body[field].trim().length > sizedFields[field].max
+    field => 'max' in sizedFields[field] && req.body[field].trim().length > sizedFields[field].max
   );
-  if (tooLargeField) {
-    const max = sizedFields[tooLargeField].max;
-    const err = new Error();
-    err.message = `Field: '${tooLargeField}' must be at most ${max} characters long`;
-    err.status = 422;
-    return next(err);
+
+  if (tooSmallField || tooLargeField) {
+    return res.status(422).json({
+      code: 422,
+      reason: 'ValidationError',
+      message: tooSmallField
+        ? `Must be at least ${sizedFields[tooSmallField]
+          .min} characters long`
+        : `Must be at most ${sizedFields[tooLargeField]
+          .max} characters long`,
+      location: tooSmallField || tooLargeField
+    });
   }
 
   // all validations passed, hash password and create user
   return User
-    .hashPassword(password)
+    .find({username})
+    .count()
+    .then(count => {
+      if (count > 0) {
+        // There is an existing user with the same username
+        return Promise.reject({
+          code: 422,
+          reason: 'ValidationError',
+          message: 'Username already taken',
+          location: 'username'
+        });
+      }
+      return User.hashPassword(password);
+    })
     .then(digest => {
       const newUser = {
         username,
@@ -92,19 +101,19 @@ router.post('/', (req, res, next) => {
       };
       return User.create(newUser);
     })
-    .then(result => {
+    .then(user => {
       return res
         .status(201)
-        .location(`/api/users/${result.id}`)
-        .json(result);
+        .location(`/api/users/${user.id}`)
+        .json(user);
     })
     .catch(err => {
-      if (err.code === 11000) {
-        err = new Error();
-        err.message = 'The username already exists';
-        err.status = 400;
+      // Forward validation errors on to the client, otherwise give a 500
+      // error because something unexpected has happened
+      if (err.reason === 'ValidationError') {
+        return res.status(err.code).json(err);
       }
-      next(err);
+      res.status(500).json({code: 500, message: 'Internal server error'});
     });
 });
 
