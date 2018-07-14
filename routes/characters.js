@@ -47,13 +47,8 @@ router.get('/:id', jwtAuth, (req, res, next) => {
 
 /* ========== POST/CREATE A CHARACTER ========== */
 router.post('/', jwtAuth, (req, res, next) => {
-  let { name, job } = req.body;
+  const { name, job } = req.body;
   const userId = req.user.id;
-
-  if (!job) {
-    job = 'KNIGHT';
-  }
-
   let newCharacter;
 
   if (job === 'KNIGHT') {
