@@ -36,8 +36,8 @@ router.post('/', (req, res, next) => {
   }
 
   // verify all fields have no whitespace
-  const explicityTrimmedFields = ['username', 'password'];
-  const nonTrimmedField = explicityTrimmedFields.find(field => req.body[field].trim() !== req.body[field]);
+  const trimmedFields = ['username', 'password'];
+  const nonTrimmedField = trimmedFields.find(field => req.body[field].trim() !== req.body[field]);
 
   if (nonTrimmedField) {
     return res.status(422).json({
@@ -50,13 +50,8 @@ router.post('/', (req, res, next) => {
 
   // verify field lengths
   const sizedFields = {
-    username: {
-      min: 6
-    },
-    password: {
-      min: 10,
-      max: 72
-    }
+    username: { min: 6 },
+    password: { min: 10, max: 72 }
   };
   const tooSmallField = Object.keys(sizedFields).find(
     field => 'min' in sizedFields[field] && req.body[field].trim().length < sizedFields[field].min
@@ -81,7 +76,7 @@ router.post('/', (req, res, next) => {
   // all validations passed, hash password and create user
   return User
     .find({username})
-    .count()
+    .countDocuments()
     .then(count => {
       if (count > 0) {
         // There is an existing user with the same username
@@ -101,19 +96,17 @@ router.post('/', (req, res, next) => {
       };
       return User.create(newUser);
     })
-    .then(user => {
-      return res
-        .status(201)
-        .location(`/api/users/${user.id}`)
-        .json(user);
-    })
+    .then(user => res.status(201).location(`/api/users/${user.id}`).json(user))
     .catch(err => {
       // Forward validation errors on to the client, otherwise give a 500
       // error because something unexpected has happened
       if (err.reason === 'ValidationError') {
         return res.status(err.code).json(err);
       }
-      res.status(500).json({code: 500, message: 'Internal server error'});
+      return res.status(500).json({
+        code: 500,
+        message: 'Internal server error'
+      });
     });
 });
 

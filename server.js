@@ -1,11 +1,14 @@
 'use strict';
 
+require('dotenv').config();
+
 const express = require('express');
+const cors = require('cors');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const passport = require('passport');
 
-const { PORT, MONGODB_URI } = require('./config.js');
+const { PORT, MONGODB_URI, CLIENT_ORIGIN } = require('./config.js');
 const localStrategy = require('./passport/local.js');
 const jwtStrategy = require('./passport/jwt.js');
 
@@ -33,15 +36,18 @@ app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'common', {
 app.use(express.json());
 
 // CORS
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-  next();
-});
+app.use(
+  cors({ origin: CLIENT_ORIGIN })
+);
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+//   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE');
+//   if (req.method === 'OPTIONS') {
+//     return res.sendStatus(204);
+//   }
+//   next();
+// });
 
 // Mount routers
 app.use('/api', authRouter);

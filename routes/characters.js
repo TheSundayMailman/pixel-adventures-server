@@ -21,28 +21,20 @@ router.get('/', jwtAuth, (req, res, next) => {
     filter.userId = userId;
   }
 
-  Character
+  return Character
     .find(filter)
-    .then(results => {
-      res.json(results[0]);
-    })
-    .catch(err => {
-      next(err);
-    });
+    .then(results => res.json(results[0]))
+    .catch(err => next(err));
 });
 
 /* ========== GET/READ A CHARACTER ========== */
 router.get('/:id', jwtAuth, (req, res, next) => {
   const { id } = req.params;
 
-  Character
+  return Character
     .find({_id: id})
-    .then(results => {
-      res.json(results[0]);
-    })
-    .catch(err => {
-      next(err);
-    });
+    .then(results => res.json(results[0]))
+    .catch(err => next(err));
 });
 
 /* ========== POST/CREATE A CHARACTER ========== */
@@ -136,18 +128,10 @@ router.post('/', jwtAuth, (req, res, next) => {
     };
   }
 
-  Character
+  return Character
     .create(newCharacter)
-    .then(result => {
-      res
-        .location(`${req.originalUrl}/${result.id}`)
-        .status(201)
-        .json(result);
-    })
-    .catch(err => {
-      next(err);
-    })
-  ;
+    .then(result => res.location(`${req.originalUrl}/${result.id}`).status(201).json(result))
+    .catch(err => next(err));
 });
 
 /* ========== PUT/UPDATE A SINGLE CHARACTER ========== */
@@ -155,8 +139,8 @@ router.put('/:id', jwtAuth, (req, res, next) => {
   const { id } = req.params;
   const updateCharacter = req.body;
 
-  Character
-    .findByIdAndUpdate({_id: id}, updateCharacter, { new: true })
+  return Character
+    .findByIdAndUpdate({ _id: id }, updateCharacter, { new: true })
     .then(result => {
       if (result) {
         res.json(result);
@@ -164,9 +148,7 @@ router.put('/:id', jwtAuth, (req, res, next) => {
         next();
       }
     })
-    .catch(err => {
-      next(err);
-    });
+    .catch(err => next(err));
 });
 
 /* ========== DELETE/REMOVE A CHARACTER ========== */
@@ -174,14 +156,10 @@ router.delete('/:id', jwtAuth, (req, res, next) => {
   const { id } = req.params;
   const userId = req.user.id;
 
-  Character
-    .findOneAndRemove({_id: id, userId})
-    .then(() => {
-      res.sendStatus(204).end();
-    })
-    .catch(err => {
-      next(err);
-    });
+  return Character
+    .findOneAndRemove({ _id: id, userId })
+    .then(() => res.sendStatus(204).end())
+    .catch(err => next(err));
 });
 
 module.exports = router;

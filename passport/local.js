@@ -7,7 +7,7 @@ const User = require('../models/user.js');
 const localStrategy = new LocalStrategy((username, password, done) => {
   let currentUser;
   User
-    .findOne({username})
+    .findOne({ username })
     .then(user => {
       currentUser = user;
       if (!currentUser) {
